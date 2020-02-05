@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?> <project name="TeoLen_Robot" basedir="." default="compilejj">		<target name="cleanJavaCC">		<property file="build.properties"/>        <delete>        	<fileset dir="${build}/uniandes/teolen/robot/control" casesensitive="yes">        	  				<include name="**/*.class"/>        	  				<exclude name="**/*Interprete*"/>        				</fileset>        	<fileset dir="${src}/uniandes/teolen/robot/control" casesensitive="yes">  				<include name="**/*.java"/>  				<exclude name="**/*Interprete*"/>				<exclude name="**/*.jj"/>			</fileset>        </delete>	</target>		<target name="cleanAll">			<property file="build.properties"/>	        <delete>				<fileset dir="${build}" />			  	<fileset dir="${src}/uniandes/teolen/robot/control" casesensitive="yes">	  				<include name="**/*.java"/>	  				<exclude name="**/*Interprete*"/>					<exclude name="**/*.jj"/>				</fileset>
+	        	<fileset dir="${dist}" casesensitive="yes">
+	        	  				<include name="**/*.jar"/>
+	        	  				<exclude name="**/*.bat"/>
+	        					<exclude name="**/*.rob"/>
+	        				</fileset>	        </delete>		</target>
+		<target name="init">		<property file="build.properties"/>		<!-- creacion de los directorios -->		<mkdir dir="${build}"/>
+		<mkdir dir="${dist}"/>	</target>	
+	<target name="generejava" depends="init">		<javacc target="${src}/uniandes/teolen/robot/control/Robot.jj" javacchome="lib" outputdirectory="${src}/uniandes/teolen/robot/control" static="false">		</javacc>		</target>	<target name="compilejj" depends="generejava">		<javac srcdir="${src}"  destdir="${build}">		</javac>	</target>		<target name="makeJar" depends="compilejj"	     description="create a Jar file for the application">		<jar destfile="${dist}/robot.jar">	        <fileset dir="${build}" includes="**/*.class" /> 		        <fileset dir="${build}" includes="**/*.gif" /> 	
+			 <fileset dir="${basedir}" includes="imagenes/*.gif" /> 	
+	         <manifest>			 	 <attribute name="Main-Class" value="uniandes.teolen.robot.interfaz.Consola"/>	          </manifest>
+	        </jar>	</target>			<target name="test" depends="compilejj">			<java classname="uniandes.teolen.robot.interfaz.Consola"         fork="yes"         dir="${basedir}"         >	    <classpath>  			<pathelement location="${build}" />   		</classpath>        </java>		</target></project>
