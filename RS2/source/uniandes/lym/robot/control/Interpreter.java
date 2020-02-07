@@ -13,7 +13,7 @@ import java.util.StringTokenizer;
  * Receives commands and relays them to the Robot. 
  * Integrantes: 
  * Juan Diego Castellanos
- * Jonatan Hernandez 
+ * Jonatan Hernandez 201813833
  */
 
 public class Interpreter   {
@@ -27,8 +27,38 @@ public class Interpreter   {
 
 	private StringBuffer output;
 
+	/*
+	 * VARIABLES DEL LENGUAJE
+	 */
+	private String comando_BEGIN = "BEGIN";
+	private String comando_END = "END";
+	private String comando_ROBOT_R = "ROBOT_R";
+	private String comando_VARS = "VARS";
+	private String comando_facing = "facing";
+	private String comando_canPut = "canPut";
+	private String comando_canPick = "canPick";
+	private String comando_canMove = "canMove";
+	private String comando_not = "not";
+	private String comando_Assign = "assign";
+	private String comando_MoveDir = "MoveDir";
+	private String comando_Move = "Move";
+	private String comando_Turn = "Turn";
+	private String comando_Face = "Face";
+	private String comando_Put = "put";
+	private String comando_Chips = "chips";
+	private String comando_Pick = "pick";
+	private String comando_if = "if";
+	private String comando_while = "while";
+	private String comando_Repeat = "Repeat";
+	private String comando_Ballons = "Ballons";
+	private String comando_skip = "Skip";
+
+	/**
+	 * Constructor vacio
+	 */
 	public Interpreter()
 	{
+		
 	}
 
 
@@ -59,19 +89,19 @@ public class Interpreter   {
 
 
 
-/**
- * Comprueba que las instrucciones esten completas,
- * es decir que termine con END
- * @param input
- */
+	/**
+	 * Comprueba que las instrucciones esten completas,
+	 * es decir que termine con END
+	 * @param input
+	 */
 	public void bloqueInstrucciones(String input){
-		if(!input.endsWith("END")) {
-			throw new Error("No es un formato valido \n");
+		if(!input.endsWith(comando_END)) {
+			throw new Error("No es una entrada valida ya que no termina en END \n");
 		}
-		Iterator<String> it = separarSinParentesis(input, ';');
+		Iterator<String> it = separar(input, ';');
 		while(it.hasNext()) {
 			String act = it.next();
-			if(act.endsWith("END")) {
+			if(act.endsWith(comando_END)) {
 				act = act.substring(0,act.length()-3);
 			}
 			if(act.length() != 0) {
@@ -79,7 +109,7 @@ public class Interpreter   {
 			}
 		}
 	}
-	
+
 	/**
 	 *  Processes a sequence of commands. A command is a letter  followed by a ";"
 	 *  The command can be:
@@ -101,31 +131,31 @@ public class Interpreter   {
 		i  = 0;
 		try{
 			while (i < n && estaBien){
-				if(in.startsWith("ROBOT_R")) {
+				if(in.startsWith(comando_ROBOT_R)) {
 					in = in.substring(7);
 
-					if(in.startsWith("VARS")) 
+					if(in.startsWith(comando_VARS)) 
 					{
 						in = in.substring(4);
 						boolean todasVariables = false;
 						while(!todasVariables) 
 						{
-							if(in.startsWith("BEGIN"))
+							if(in.startsWith(comando_BEGIN))
 							{
 								todasVariables = true;
-								
+
 							}
 							else 
 							{
 								if(!Character.isLetter(in.charAt(0))) 
 								{
-									throw new Error("La variable debería empezar con una letra \n");	
+									throw new Error("La variable debería empezar por una \n");	
 								}
 								int k = 0;
 								boolean casoEspecial = false;
 								while(in.charAt(k) != ',' && !casoEspecial)
 								{
-									if(in.substring(k, k+5).equals("BEGIN"))
+									if(in.substring(k, k+5).equals(comando_BEGIN))
 									{
 										casoEspecial = true;
 									}
@@ -147,13 +177,13 @@ public class Interpreter   {
 							}
 						}
 					}
-					if(in.startsWith("BEGIN")) {
+					if(in.startsWith(comando_BEGIN)) {
 						in = in.substring(5);
 						bloqueInstrucciones(in);
 						estaBien = false;
 					}
 					else {
-						throw new Error("La cadena debería empezar con BEGIN o VARS \n");
+						throw new Error("La cadena empiezar con BEGIN o VARS \n");
 					}
 				}
 				else{
@@ -162,7 +192,7 @@ public class Interpreter   {
 					while(tokens.hasMoreTokens()) {
 						ficha = tokens.nextToken();
 						switch (ficha){
-						
+
 						case "b": 
 							world.grabBalloons(1); 
 							output.append("getBalloon \n");
@@ -175,22 +205,22 @@ public class Interpreter   {
 							world.turnRight(); 
 							output.append("turnRignt \n");
 							break;
-							
+
 						case "M": 
 							world.moveForward(1); 
 							output.append("move \n");
 							break;
-							
+
 						case "C": 
 							world.putChips(1); 
 							output.append("putChip \n");
 							break;
-						
+
 						case "c": 
 							world.pickChips(1); 
 							output.append("getChip \n");
 							break;
-						
+
 						default: output.append("Comando no reconocido:  "+ ficha); estaBien = false;
 						}
 
@@ -223,11 +253,12 @@ public class Interpreter   {
 	/**
 	 * Leer una condición 
 	 * @param cond
+	 * 
 	 * @return
 	 * @throws Error
 	 */
 	public boolean leerCondicion(String cond) throws Error {
-		if(cond.startsWith("facing")) {
+		if(cond.startsWith(comando_facing)) {
 			String dir = cond.substring(7,cond.length()-1);
 
 			switch (dir) {
@@ -240,36 +271,36 @@ public class Interpreter   {
 			case "south":
 				return world.facingSouth();
 			default:
-				throw new Error("facing no tiene el formato esperado \n");
+				throw new Error("facing no tiene el formato correcto \n");
 
 			}
 		}
-		else if(cond.startsWith("canPut")) {
+		else if(cond.startsWith(comando_canPut)) {
 			String parametro = cond.substring(7, cond.length() - 1);
-			String[] parametros = parametro.split(","); int n;
+			String[] parametros = parametro.split("of:"); int n;
 			if(Character.isLetter(parametros[1].charAt(0))){
 				verificarNombreVariable(parametros[1]);
 				n = map.get(parametros[1]);
 			}
-			else if(Character.isDigit(parametros[1].charAt(0))){
-				n = Integer.parseInt(parametros[1]);
+			else if(Character.isDigit(parametros[0].charAt(0))){
+				n = Integer.parseInt(parametros[0]);
 			}
 			else {
-				throw new Error("canPut no tiene el formato esperado \n");
+				throw new Error("canPut no tiene el formato correcto \n");
 			}
 
-			switch (parametros[0]) {
+			switch (parametros[1]) {
 			case "chips":
 				return world.freeSpacesForChips() >= n && world.getMisFichas() >= n && n >= 0;
 			case "balloons":
 				return world.getMisGlobos() >= n && n >= 0;
 			default:
-				throw new Error("canPut no tiene el formato esperado \n");
+				throw new Error("canPut no tiene el formato correcto \n");
 			}
 		}
-		else if(cond.startsWith("canPick")) {
+		else if(cond.startsWith(comando_canPick)) {
 			String parametro = cond.substring(8, cond.length() - 1);
-			String[] parametros = parametro.split(","); int n;
+			String[] parametros = parametro.split("of:"); int n;
 			if(Character.isLetter(parametros[1].charAt(0))){
 				verificarNombreVariable(parametros[1]);
 				n = map.get(parametros[1]);
@@ -278,7 +309,7 @@ public class Interpreter   {
 				n = Integer.parseInt(parametros[1]); 
 			}
 			else {
-				throw new Error("canPick no tiene el formato esperado \n");
+				throw new Error("canPick no tiene el formato correcto \n");
 			}
 
 			switch (parametros[0]) {
@@ -287,10 +318,10 @@ public class Interpreter   {
 			case "balloons": 
 				return world.contarGlobos() >= n && n >= 0;
 			default:
-				throw new Error("canPick no tiene el formato esperado \n");
+				throw new Error("canPick no tiene el formato correcto \n");
 			}
 		}
-		else if(cond.startsWith("canMove")) {
+		else if(cond.startsWith(comando_canMove)) {
 			String parametro = cond.substring(8, cond.length() - 1);
 			switch (parametro) {
 			case "north":
@@ -302,21 +333,21 @@ public class Interpreter   {
 			case "west":
 				return !world.estaIzquierda();
 			default: 
-				throw new Error("canMove no tiene el formato esperado");
+				throw new Error("canMove no tiene el formato correcto");
 			}
 		}
-		else if(cond.startsWith("not")) {
+		else if(cond.startsWith(comando_not)) {
 			cond = cond.replaceFirst("(", "").substring(0, cond.length()-2);
 
 			return !leerCondicion(cond);
 		}
 		return false;
 	}
-	
-/**
- * Mueve el robot hacia adelante, esperando un segundo.
- * @param var
- */
+
+	/**
+	 * Mueve el robot hacia adelante, en la direccion en la que esta mirando.
+	 * @param var
+	 */
 	private void move(String var) {
 		if(Character.isLetter(var.charAt(0))){
 			verificarNombreVariable(var);
@@ -338,7 +369,7 @@ public class Interpreter   {
 			}
 		}
 		else {
-			throw new Error("Move no tiene el formato esperado \n");
+			throw new Error("Move no tiene el formato correcto \n");
 		}
 	}
 
@@ -372,12 +403,19 @@ public class Interpreter   {
 		}
 	}
 
+	/**
+	 * verifica que la variable fue declarada de una manera correcta.
+	 * @param variableAVerificar
+	 */
 	public void verificarNombreVariable(String variableAVerificar) {
 		if(map.get(variableAVerificar) == null) {
-			throw new Error("La variable no fue declarada \n");
+			throw new Error("La variable no se encuentra \n");
 		}
 	}
-
+	/**
+	 * verifica que los datos que entren sean unicamente de tipo numerico.
+	 * @param numeroAVerificar
+	 */
 	public void verificarNumero(String numeroAVerificar) {
 		for(int j = 0; j < numeroAVerificar.length(); j++) {
 			if(!Character.isDigit(numeroAVerificar.charAt(j))) {
@@ -385,19 +423,22 @@ public class Interpreter   {
 			}
 		}
 	}
-
-	public Iterator<String> separarSinParentesis(String text, char split) {
-		int cont = 0;
+	
+	/**
+	 * separa el texto por el caracter dado
+	 * @param text
+	 * @param split
+	 * @return un arreglo de String el cual contiene todo el texto
+	 */
+	public Iterator<String> separar(String text, char split) {
+		
 		ArrayList<String> tokens = new ArrayList<String>();
 		String actual = "";
 		for (int i = 0; i < text.length(); i++) {
 			char act = text.charAt(i);
-			if( act == '(')
-				cont++;
-			else if(act == ')')
-				cont--;
+			
 
-			if(act == split && cont == 0) {
+			if(act == split ) {
 				tokens.add(actual);actual = "";
 			}
 			else {
@@ -411,24 +452,29 @@ public class Interpreter   {
 		return tokens.iterator();
 	}
 
+	/**
+	 * Metodo que se encarga de leer la instruccion entrante
+	 * verifica que esta tenga el formato esperado
+	 * cumple la funcion, tales como while, repeat.  
+	 * @param instruccion 
+	 */
 
-	
 	public void leerInstruccion(String instruccion) {
-		if(instruccion.startsWith("Assign")){
-			String parametro = instruccion.substring(7, instruccion.length() - 1);
-			String[] parametros = parametro.split(",");
+		if(instruccion.startsWith(comando_Assign)&& (instruccion.subSequence(8, 9)== ("to").subSequence(0, 1))){
+			String parametro = instruccion.substring(8, instruccion.length() - 1);
+			String[] parametros = parametro.split("to");
 			if(parametros.length != 2) 
-				throw new Error("Assign no tiene el formato esperado \n");
+				throw new Error("Assign no tiene el formato correcto \n");
 
-			verificarNombreVariable(parametros[0]);
-			verificarNumero(parametros[1]);
-			map.put(parametros[0], Integer.parseInt(parametros[1]));
+			verificarNombreVariable(parametros[1]);
+			verificarNumero(parametros[0]);
+			map.put(parametros[1], Integer.parseInt(parametros[0]));
 			output.append("assign \n");
 
 		}
-		else if(instruccion.startsWith("MoveDir")) {
-			String parametro = instruccion.substring(8, instruccion.length() - 1);
-			String[] parametros = parametro.split(","); int n;
+		else if(instruccion.startsWith(comando_MoveDir) && (instruccion.subSequence(7, 10)== ("inDir").subSequence(0, 3))) {
+			String parametro = instruccion.substring(6, instruccion.length() - 1);
+			String[] parametros = parametro.split("inDir"); int n;
 
 			switch(parametros[1]){
 			case "front":
@@ -479,7 +525,7 @@ public class Interpreter   {
 				}
 				n = 2;
 				break;
-			default: throw new Error("MoveDir no tiene el formato esperado \n");
+			default: throw new Error(" El comando Move in Dir no tiene el formato correcto \n");
 			}
 			move(parametros[0]);
 			for(int i = 0; i<n; i++) {
@@ -488,10 +534,10 @@ public class Interpreter   {
 			}
 
 		}
-		else if(instruccion.startsWith("Move")){
-			String variableInstruccion = instruccion.substring(5, instruccion.length() - 1);
-			if(variableInstruccion.contains(",")) {
-				String[] parametros = variableInstruccion.split(",");
+		else if(instruccion.startsWith(comando_Move)){
+			String variableInstruccion = instruccion.substring(6, instruccion.length() - 1);
+			if(variableInstruccion.contains("toThe")) {
+				String[] parametros = variableInstruccion.split("toThe");
 				face(parametros[1]); 
 				move(parametros[0]);
 			}
@@ -499,19 +545,19 @@ public class Interpreter   {
 				move(variableInstruccion);
 			}
 		}
-		else if(instruccion.startsWith("Turn")){
+		else if(instruccion.startsWith(comando_Turn)) {
 			String parametro = instruccion.substring(5, instruccion.length() - 1);
 			turn(parametro);
 		}
-		else if(instruccion.startsWith("Face")) {
+		else if(instruccion.startsWith(comando_Face)) {
 			String parametro = instruccion.substring(5, instruccion.length() - 1);
 			face(parametro);
 		}
-		else if(instruccion.startsWith("Put")) {
+		else if(instruccion.startsWith(comando_Put)) {
 			String parametro = instruccion.substring(4, instruccion.length() - 1);
-			String[] parametros = parametro.split(","); int n;
+			String[] parametros = parametro.split("of"); int n;
 			if(parametros.length != 2) 
-				throw new Error("Put no tiene el formato esperado \n");
+				throw new Error("Put no tiene el formato correcto \n");
 
 			if(Character.isLetter(parametros[1].charAt(0))){
 				verificarNombreVariable(parametros[1]);
@@ -521,25 +567,25 @@ public class Interpreter   {
 				n = Integer.parseInt(parametros[1]);
 			}
 			else {
-				throw new Error("Put no tiene el formato esperado \n");
+				throw new Error("Put no tiene el formato correcto \n");
 			}
-			if(parametros[0].equals("Balloons")) {
+			if(parametros[0].equals(comando_Ballons)) {
 				world.putBalloons(n);
 				output.append("putBalloon \n");
 			}
-			else if(parametros[0].equals("Chips")) {
+			else if(parametros[0].equals(comando_Chips)) {
 				world.putChips(n);
 				output.append("putChip \n");
 			}
 			else {
-				throw new Error("Put no tiene el formato esperado \n");
+				throw new Error("Put no tiene el formato correcto \n");
 			}
 		}
-		else if(instruccion.startsWith("Pick")) {
+		else if(instruccion.startsWith(comando_Pick)) {
 			String parametro = instruccion.substring(5, instruccion.length() - 1);
-			String[] parametros = parametro.split(","); int n;
+			String[] parametros = parametro.split("of"); int n;
 			if(parametros.length != 2) 
-				throw new Error("Pick no tiene el formato esperado \n");
+				throw new Error("Pick no tiene el formato correcto \n");
 
 			if(Character.isLetter(parametros[1].charAt(0))){
 				verificarNombreVariable(parametros[1]);
@@ -549,26 +595,26 @@ public class Interpreter   {
 				n = Integer.parseInt(parametros[1]);
 			}
 			else {
-				throw new Error("Pick no tiene el formato esperado \n");
+				throw new Error("Pick no tiene el formato correcto \n");
 			}
-			if(parametros[0].equals("Balloons")) {
+			if(parametros[0].equals(comando_Ballons)) {
 				world.grabBalloons(n);
 				output.append("pickBalloon \n");
 			}
-			else if(parametros[0].equals("Chips")) {
+			else if(parametros[0].equals(comando_Chips)) {
 				world.pickChips(n);
 				output.append("pickChip \n");
 			}
 			else {
-				throw new Error("Pick no tiene el formato esperado \n");
+				throw new Error("Pick no tiene el formato correcto \n");
 			}
 		}
-		else if(instruccion.startsWith("Skip")) {
+		else if(instruccion.startsWith(comando_skip)) {
 
 		}
-		else if(instruccion.startsWith("if")) {
+		else if(instruccion.startsWith(comando_if)) {
 			Iterator<String> it = 
-					separarSinParentesis(instruccion.substring(3, instruccion.length() - 1), ',');
+					separar(instruccion.substring(3, instruccion.length() - 1), ':');
 			boolean condition = leerCondicion(it.next());
 			String b1 = it.next(); String b2 = it.next();
 			if(condition)
@@ -576,17 +622,19 @@ public class Interpreter   {
 			else
 				bloqueInstrucciones(b2.replaceFirst("BEGIN", ""));	
 		}
-		else if(instruccion.startsWith("while")) {
+		// verifica el caso en el que sea while.
+		else if(instruccion.startsWith(comando_while)) {
 			Iterator<String> it = 
-					separarSinParentesis(instruccion.substring(6, instruccion.length() - 1), ',');
+					separar(instruccion.substring(6, instruccion.length() - 1), ',');
 			String cond = it.next(); String b = it.next().replaceFirst("BEGIN", "");
 			while(leerCondicion(cond))
 				bloqueInstrucciones(b);
 
 		}
-		else if(instruccion.startsWith("Repeat")) {
+		// verifica el caso en el que sea repeat.
+		else if(instruccion.startsWith(comando_Repeat)) {
 			Iterator<String> it = 
-					separarSinParentesis(instruccion.substring(7, instruccion.length() - 1), ',');
+					separar(instruccion.substring(7, instruccion.length() - 1), ',');
 			String nT = it.next(); int n;
 			String b = it.next().replaceFirst("BEGIN", "");
 			if(Character.isLetter(nT.charAt(0))){
@@ -597,13 +645,13 @@ public class Interpreter   {
 				n = Integer.parseInt(nT);
 			}
 			else {
-				throw new Error("Formato no esperado \n");
+				throw new Error("Formato incorrecto \n");
 			}			
 			for (int i = 0; i < n; i++)
 				bloqueInstrucciones(b);
 		}
 		else {
-			throw new Error("Unrecognized command \n");
+			throw new Error("comando desconocido \n");
 		}
 		try {
 			Thread.sleep(1000);
@@ -611,7 +659,11 @@ public class Interpreter   {
 			System.err.format("IOException: %s%n", e);
 		}
 	}
-	
+
+	/**
+	 * metodo auxiliar para rotar
+	 * @param dir
+	 */
 	private void face(String dir) {
 		switch(dir){
 		case "north":
@@ -658,7 +710,7 @@ public class Interpreter   {
 				}
 			}
 			break;
-		default: throw new Error("Face no tiene el formato esperado \n");
+		default: throw new Error("Face no tiene el formato correcto \n");
 		}
 	}
 
